@@ -2,7 +2,6 @@
 
 /* setting up typing function */
 int nr_echo( int start_y, int start_x, int h, int w ){
-    int stored_text[500000];
     int ch, y, x, end_y, end_x;
     ch = 0;
     y = start_y;
