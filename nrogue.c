@@ -1,115 +1,78 @@
 #include <stdio.h>
 #include <ncurses.h>
 
-#define WIDTH 80
-#define BUFFER 600000
-int main()
-{
-
-/*----------------------------------------------------------*/
-/*definitions*/
+/* setting up typing function */
+int nr_echo( int start_y, int start_x, int w, int h ){
     
-    int ch, cursy, cursx, ch_count;
-    int stored_line[BUFFER];
+    int ch, y, x, end_y, end_x;
+    ch = 0;
+    y = start_y;
+    x = start_x;
+    end_y = start_y + h;
+    end_x = start_x + w;
+    move( start_y, start_x );
 
-    FILE* fp;
-
-/*----------------------------------------------------------*/
-/*setup screen*/
-
-    initscr();              /*initializes the screen*/
-    raw();                               
-    keypad(stdscr, TRUE);   /*get special keys*/
-    noecho();               /*don't echo while we do getch()*/
-    curs_set(2);            /*sets the cursor to a box*/
-
-/*----------------------------------------------------------*/
-/*setup text editor*/
-
-    /*draws a nice header*/
-    mvaddstr(1,(WIDTH/2) - 5,"- NROGUE -");
-    mvaddstr(2,0,"press F1 to exit    press F2 to save");
-    move(4,0);
-    /*makes a line diving header and body*/
-    {
-        int n;
-        for (n = 0; n <WIDTH; n++)
-            addch('-');
-    }
-    /*start the program at the appropriate place*/
-    cursy = 5;
-    cursx = 0;
-    ch_count = 0;
-/*----------------------------------------------------------*/
-/*main loop*/
-
-    while (ch != KEY_F(1)){
-        /* if the cursor is at the 40th line*/
-        /* automatically move to the next line*/
-        if ( cursx == WIDTH ){
-            cursy ++;
-            cursx = 0;
-        }
-        /*set cursor position and wait for chars*/
-        move(cursy, cursx);
+    /* main loop, F1 quits */
+    while (ch != KEY_F(1) ){
         ch = getch();
         
-        /*when backspace is pressed...*/
-        if (ch == KEY_BACKSPACE && cursx > 0){
-            
-            /*jumps the cursor back one space*/
-            /*and deletes that character*/
-            cursx --;
-            ch_count --;
-            move(cursy, cursx);
-            delch();
+        /* backspace when not at the start of a line */
+        if ( ch == KEY_BACKSPACE && x > start_x ){
+            x--;
+            mvdelch( y, x );
         }
-            /*jumps to prior line if you are*/
-            /*at the start of the current line*/
-            /*and not at the start of the body*/
-        else if (ch == KEY_BACKSPACE && cursx == 0 && cursy >5){
-            cursy --;
-            cursx = WIDTH;
-            ch_count --;
+        /* backspace when at the start of a line */
+        else if ( ch == KEY_BACKSPACE && x == start_x && y > start_y ){
+            y--;
+            x = end_x;
+            mvdelch( y, x );
         }
-        /*start a new line if enter is pressed*/
-        else if (ch == 10){
-            cursy++;
-            cursx = 0;
-            stored_line[ch_count] = 10;
-            ch_count ++;
+        /* return if enter is pressed and not at bottom of field*/
+        else if ( ch == '\n' && y <= end_y ){
+            x = start_x;
+            mvaddch( y, x, ch );
+            y++;
         }
-/*----------------------------------------------------------*/
-        /*print out a copy of stored_line[1024]*/
-        /*tests to see how file output will appear*/
-        else if (ch == KEY_F(2)){
-            int ch_print_count, ch_print_x;
-            ch_print_x = 0;
-            mvaddstr(0,0, "save file as?:");
-           /* TODO : Make this actually work */
-            fp=fopen("testfile","w+");  /*open the file*/
-            for (ch_print_count = 0; ch_print_count < ch_count; ch_print_count ++){
-                fputc( stored_line[ch_print_count], fp); /*put ch into file*/
-                ch_print_x ++;
-            }
-            getch();
-            break;
-/*----------------------------------------------------------*/
+        /* auto return if not at bottom of field */
+        else if ( x >= end_x && y < end_y ){
+            x = start_x;
+            y++;
+            mvaddch( y, x, ch );
+            x++;
         }
-        /*draw a character in the next position*/
-        else {
-           /* addch(ch);*/
-            stored_line[ch_count] = ch;
-            mvaddch(cursy,cursx,stored_line[ch_count]);
-            cursx ++;
-            ch_count ++;
-            /*refresh();*/
+
+        /* main print */
+        else{
+            mvaddch( y, x, ch );
+            x++;
         }
-    
     }
+    return 0;
+}
 
-/*----------------------------------------------------------*/
-
+int main(){
+    initscr();              /* initializes the screen */
+    raw();                  /* get raw input */             
+    keypad(stdscr, TRUE);   /* get special keys */
+    noecho();               /* we will echo manually */
+    curs_set(2);            /* sets the cursor to a solid rectangle */
+    
+    /* draws a nice header */
+    /* doing this manually because i'm a savage */
+    mvaddstr( 1, 37, "- NROGUE -" );
+    mvaddstr( 2, 2, "F1: exit    F2: save" );
+    move( 3, 2 );
+    /* makes a line diving header and body */
+    {
+        int n;
+        for ( n = 0; n < 80; n++ )
+            addch( '_' );
+    }
+    
+    /* primary function call */
+    nr_echo( 5, 2, 20, 2 );
+    mvaddstr( 0, 2, "save file as:" );
+    nr_echo( 0, 16, 16, 1 );
     endwin();
     return 0;
 }
