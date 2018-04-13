@@ -2,11 +2,11 @@
 #include <ncurses.h>
 
 /* setting up typing function */
-int nr_echo(int y, int x, int w, int h){
-    int ch, start_y, start_x;
+int nr_echo(int start_y, int start_x, int w, int h){
+    int ch, y, x;
     ch = 0;
-    start_y = y;
-    start_x = x;
+    y = start_y;
+    x = start_x;
     /* main loop, F1 quits */
     while (ch != KEY_F(1)){
         ch = getch();
@@ -22,7 +22,7 @@ int nr_echo(int y, int x, int w, int h){
             mvdelch(y, x);
         }
         /* return if enter is pressed and not at bottom of field*/
-        else if (ch == KEY_ENTER && y <= h){
+        else if (ch == '\n' && y <= h){
             x = start_x;
             y++;
             move(y,x);
