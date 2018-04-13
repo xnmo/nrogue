@@ -1,14 +1,13 @@
-#include <stdio.h>
 #include <ncurses.h>
 
 /* setting up typing function */
-int nr_echo( int start_y, int start_x, int w, int h ){
-    
+int nr_echo( int start_y, int start_x, int h, int w ){
+    int stored_text[500000];
     int ch, y, x, end_y, end_x;
     ch = 0;
     y = start_y;
     x = start_x;
-    end_y = start_y + h;
+    end_y = start_y + h - 1;
     end_x = start_x + w;
     move( start_y, start_x );
 
@@ -30,8 +29,8 @@ int nr_echo( int start_y, int start_x, int w, int h ){
         /* return if enter is pressed and not at bottom of field*/
         else if ( ch == '\n' && y <= end_y ){
             x = start_x;
-            mvaddch( y, x, ch );
             y++;
+            move( y, x );
         }
         /* auto return if not at bottom of field */
         else if ( x >= end_x && y < end_y ){
@@ -42,11 +41,12 @@ int nr_echo( int start_y, int start_x, int w, int h ){
         }
 
         /* main print */
-        else{
+        else if ( x <= end_x && y <= end_y ){
             mvaddch( y, x, ch );
             x++;
         }
     }
+    /* print the array */
     return 0;
 }
 
@@ -70,9 +70,13 @@ int main(){
     }
     
     /* primary function call */
-    nr_echo( 5, 2, 20, 2 );
+    /* starting y, starting x, height, width */
+    nr_echo( 5, 2, 40, 80 );
+    
+    /* ask for file name */
     mvaddstr( 0, 2, "save file as:" );
-    nr_echo( 0, 16, 16, 1 );
+    nr_echo( 0, 16, 1, 16 );
+
     endwin();
     return 0;
 }
