@@ -46,6 +46,16 @@ char * nr_echo( int start_y, int start_x, int h, int w, int *out_count ){
             stored_line[ch_count] = '\n';
             ch_count++;
         }
+        else if ( ch == '\t' && x < end_x - 4){
+            int i;
+            x = x + 4;
+            move( y, x );
+            for ( i = 4; i > 0; i--){
+                stored_line[ch_count] = ' ';
+                ch_count++;
+            }
+        }
+
         /* auto return if not at bottom of field */
         else if ( x >= end_x && y < end_y ){
             x = start_x;
@@ -57,7 +67,7 @@ char * nr_echo( int start_y, int start_x, int h, int w, int *out_count ){
         }
 
         /* main print */
-        else if ( x <= end_x && y <= end_y ){
+        else if ( x <= end_x && y <= end_y && ch != '\t'){
             stored_line[ch_count] = ch;
             mvaddch( y, x, stored_line[ch_count] );
             x++;
