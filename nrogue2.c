@@ -1,4 +1,5 @@
 #include <ncurses.h>
+#include <stdlib.h>
 
 /* draws a nice box around the text field */
 void textbox(int y1, int y2, int x1, int x2){
@@ -26,11 +27,13 @@ void textbox(int y1, int y2, int x1, int x2){
 
 
 /* echo and keystrokes */
-void textfield(int y1, int y2, int x1, int x2){
-    int ch, writey, writex;
+char *textfield(int y1, int y2, int x1, int x2){
+    int ch, writey, writex, ch_count;
+    char *stored_line;
+    stored_line = malloc(100000);
     writey = y1+1;
     writex = x1+1;
-    ch = 0;
+    ch = ch_count = 0;
 
     while (ch != KEY_F(4) ){
         ch = getch();
@@ -39,18 +42,22 @@ void textfield(int y1, int y2, int x1, int x2){
             writex--;
             mvaddch(writey, writex, ' ');
             move(writey, writex);
+            ch_count--;
         }
         /* backspace when at start of line */
         else if (ch == KEY_BACKSPACE && writex == x1+1 && writey > y1+1){
             writey--;
             writex = x2-1;
             mvdelch(writey, writex);
+            ch_count--;
         }
         /* return if enter is pressed and not at bottom of field */
         else if (ch == '\n' && writey < y2-1){
             writey++;
             writex = x1+1;
             move(writey, writex);
+            stored_line[ch_count] = ch;
+            ch_count++;
         }
         /* auto return if not at bottom of field */
         else if (writey < y2-1 && writex > x2-1){
@@ -58,18 +65,27 @@ void textfield(int y1, int y2, int x1, int x2){
             writex = x1+1;
             mvaddch(writey, writex, ch);
             writex++;
+            stored_line[ch_count] = ch;
+            ch_count++;
         }
         /* main print */
         else if (writey < y2 && writex < x2){
             mvaddch(writey, writex, ch);
-            writex++;
+            writex++; 
+            stored_line[ch_count] = ch;
+            ch_count++;
+
         }
 
     }
+    stored_line[ch_count] = '\0';
+    return stored_line;
 }
 
 int main(){
-   
+    FILE *fp;
+    int i;
+    char *save_string;   
 
     initscr();              /* initializes the screen */
     raw();                  /* get raw input */             
@@ -82,7 +98,7 @@ int main(){
     mvaddstr(3,36, "- NROGUE -");
     /* main textbox field */
     textbox(6, 40, 2, 82);
-    textfield(6, 40, 2, 82);
+    save_string = textfield(6, 40, 2, 82);
     /* various other boxes for fun*/
     textbox(20, 23, 60, 85);
     textfield(20, 23, 60, 85);
@@ -91,7 +107,14 @@ int main(){
     textfield(4, 19, 16, 29);
     textbox(10, 15, 12, 65);
     textfield(10, 15, 12, 65);
+     
+    fp = fopen("testfile2", "w+");
+    for (i = 0; save_string[i] != '\0'; i++)
+        fputc(save_string[i], fp);
+    fclose(fp);
+    free(save_string);
     
+
     endwin();
     return 0;
 }
