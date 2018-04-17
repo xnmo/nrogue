@@ -1,6 +1,8 @@
 #include <ncurses.h>
 #include <stdlib.h>
 
+/*----------------------------------------------------------------------------*/
+
 /* draws a nice box around the text field */
 void textbox(int y1, int y2, int x1, int x2){
     int i, drawy, drawx;
@@ -25,8 +27,9 @@ void textbox(int y1, int y2, int x1, int x2){
     move(y1+1, x1+1);
 }
 
+/*----------------------------------------------------------------------------*/
 
-/* echo and keystrokes */
+/* echo keystrokes and store input */
 char *textfield(int y1, int y2, int x1, int x2){
     int ch, writey, writex, ch_count;
     char *stored_line;
@@ -78,14 +81,16 @@ char *textfield(int y1, int y2, int x1, int x2){
         }
 
     }
-    stored_line[ch_count] = '\0';
+    stored_line[ch_count - 1] = '\0';
     return stored_line;
 }
+
+/*----------------------------------------------------------------------------*/
 
 int main(){
     FILE *fp;
     int i;
-    char *save_string;   
+    char *save_string, *title_string;   
 
     initscr();              /* initializes the screen */
     raw();                  /* get raw input */             
@@ -93,27 +98,32 @@ int main(){
     noecho();               /* we will echo manually */
     curs_set(2);            /* sets the cursor to a solid rectangle */
     
+/*----------------------------------------------------------------------------*/
+
     /* print a nice header */
     textbox(1, 5, 2, 82);
     mvaddstr(3,36, "- NROGUE -");
+
     /* main textbox field */
     textbox(6, 40, 2, 82);
     save_string = textfield(6, 40, 2, 82);
-    /* various other boxes for fun*/
-    textbox(20, 23, 60, 85);
-    textfield(20, 23, 60, 85);
 
-    textbox(4, 19, 16, 29);
-    textfield(4, 19, 16, 29);
-    textbox(10, 15, 12, 65);
-    textfield(10, 15, 12, 65);
-     
-    fp = fopen("testfile2", "w+");
+    /* save as box */
+    textbox(20, 23, 30, 60);
+    mvaddstr(21,38," - SAVE AS - ");
+    move(22, 31);
+    title_string = textfield(21, 23, 30, 60);
+
+/*----------------------------------------------------------------------------*/
+
+    /* save the main sting as a file, one char at a time */
+    fp = fopen(title_string, "w+");
     for (i = 0; save_string[i] != '\0'; i++)
         fputc(save_string[i], fp);
     fclose(fp);
     free(save_string);
     
+/*----------------------------------------------------------------------------*/
 
     endwin();
     return 0;
