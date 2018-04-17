@@ -48,19 +48,42 @@ char *textfield(int y1, int y2, int x1, int x2){
             ch_count--;
         }
         /* backspace when at start of line */
+        /* i think this is completely broken and will ruin files */
+        /* TODO I have no idea why this doesnt work */
+        /* is the for loop happening at all?? */
         else if (ch == KEY_BACKSPACE && writex == x1+1 && writey > y1+1){
+            int i;
+            /* set cursor at end of previous line and update ch_count*/
             writey--;
-            writex = x2-1;
-            mvdelch(writey, writex);
             ch_count--;
+            writex = x2-1;
+            /* moving left until we find a char */
+            /* i suspect mvinch is the issue here */
+            for (i = mvinch(writey, writex); i != ' '; writex--)
+                mvaddch(writey, writex, ' ');
         }
         /* return if enter is pressed and not at bottom of field */
         else if (ch == '\n' && writey < y2-1){
+            /* add newline char at end of current line */
+            move(writey, writex);
+            stored_line[ch_count] = '\n';
+            /* move cursor to next line and increment ch_count */
             writey++;
             writex = x1+1;
             move(writey, writex);
-            stored_line[ch_count] = ch;
             ch_count++;
+        }
+        /* print 4 spaces if tab is pressed */
+        /* will not tab near right edge of window */
+        /* TODO fix this if you're really bored */
+        else if (ch == '\t' && writex <= x2-4){
+            int i;
+            for (i=0; i < 4; i++){
+                mvaddch(writey, writex, ' ');
+                stored_line[ch_count] = ' ';
+                writex++;
+                ch_count++;
+            }
         }
         /* auto return if not at bottom of field */
         else if (writey < y2-1 && writex > x2-1){
@@ -81,6 +104,7 @@ char *textfield(int y1, int y2, int x1, int x2){
         }
 
     }
+    /* overwrite last char (F4) with a null termination */
     stored_line[ch_count - 1] = '\0';
     return stored_line;
 }
@@ -122,7 +146,8 @@ int main(){
         fputc(save_string[i], fp);
     fclose(fp);
     free(save_string);
-    
+    free(title_string);
+
 /*----------------------------------------------------------------------------*/
 
     endwin();
